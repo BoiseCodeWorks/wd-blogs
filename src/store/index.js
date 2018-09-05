@@ -50,7 +50,7 @@ export default new vuex.Store({
             })
         },
         getMyBlogs({ state, commit, dispatch }) {
-            db.collection('blogs').where("author", "==", state.user.email).get().then(querySnapShot => {
+            db.collection('blogs').where("creatorId", "==", state.user.uid).get().then(querySnapShot => {
                 let blogs = []
                 querySnapShot.forEach(doc => {
                     if (doc.exists) {
@@ -67,6 +67,12 @@ export default new vuex.Store({
                 let blog = doc.data()
                 blog.id = doc.id
                 commit('setActiveBlog', blog)
+            })
+        },
+        deleteBlog({ commit, dispatch }, blog) {
+            db.collection('blogs').doc(blog.id).delete().then(doc => {
+                console.log(doc)
+                router.push('/')
             })
         },
         //#endregion

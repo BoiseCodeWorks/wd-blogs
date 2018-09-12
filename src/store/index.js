@@ -12,7 +12,8 @@ export default new vuex.Store({
         user: {},
         blogs: [],
         myBlogs: [],
-        activeBlog: {}
+        activeBlog: {},
+        comments: []
     },
     mutations: {
         setUser(state, user) {
@@ -26,6 +27,9 @@ export default new vuex.Store({
         },
         setActiveBlog(state, blog) {
             state.activeBlog = blog
+        },
+        setComments(state, comments) {
+            state.comments = comments
         }
     },
     actions: {
@@ -67,12 +71,34 @@ export default new vuex.Store({
                 let blog = doc.data()
                 blog.id = doc.id
                 commit('setActiveBlog', blog)
+                dispatch('getComments', blog.id)
             })
         },
         deleteBlog({ commit, dispatch }, blog) {
             db.collection('blogs').doc(blog.id).delete().then(doc => {
                 console.log(doc)
                 router.push('/')
+            })
+        },
+        //#endregion
+        //#region comments
+        createComment({ commit, dispatch }, newComment) {
+            db.collection("blogs").doc(newComment.blogId).collection('comments').add(newComment).then(doc => {
+                console.log("Created Comment!")
+            })
+        },
+        getComments({ commit, dispatch }, blogId) {
+            //this is for a parent level collect of comments(equal level as blogs)
+            // db.collection('comments').where("blogId", "==", blogId).onSnapshot(querySnapShot => {
+            //this is for a sub collection that only exists on an individual blog level
+            db.collection('blogs').doc(blogId).collection('comments').onSnapshot(querySnapShot => {
+                let comments = []
+                querySnapShot.forEach(doc => {
+                    let comment = doc.data()
+                    comment.id = doc.id
+                    comments.push(comment)
+                })
+                commit('setComments', comments)
             })
         },
         //#endregion
